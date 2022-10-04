@@ -24,9 +24,9 @@
  * SOFTWARE.
  */
 
- /**
-  * @brief a pure-C JEMI serializer for embedded systems
-  */
+/**
+ * @brief a pure-C JEMI serializer for embedded systems
+ */
 
 #ifndef _JEMI_H_
 #define _JEMI_H_
@@ -59,15 +59,20 @@ typedef enum {
 } jemi_type_t;
 
 typedef struct _jemi_node {
+  struct _jemi_node *sibling; // any object may have siblings...
   jemi_type_t type;
-  // NB: a tail pointer would make adding elements more efficient, but we
-  // choose small size over speed.
-  struct _jemi_node *link;        // for JEMI_OBJECT or JEMI_ARRAY
   union {
-    double number;                // for JEMI_NUMBER
-    const char *string;           // for JEMI_STRING
+    struct _jemi_node *children; // for JEMI_ARRAY or JEMI_OBJECT
+    double number;               // for JEMI_NUMBER
+    const char *string;          // for JEMI_STRING
   };
 } jemi_node_t;
+
+// List terminator value for jemi_array()
+#define jemi_array_end() ((jemi_node_t *)NULL)
+
+// List terminator value for jemi_obect()
+#define jemi_object_end() ((jemi_node_t *)NULL)
 
 // Signature for the jemi_emit function
 typedef void (*jemi_writer_t)(char ch);
@@ -97,28 +102,61 @@ void jemi_init(jemi_node_t *pool, size_t pool_size);
  */
 void jemi_reset(void);
 
-/**
- * @brief Allocate and initialize a jemi_node from the pool.
- *
- * Note: there is no corresponding jemi_free(), because the expected usage model
- * is that you'll build up your JEMI structure before calling `jemi_emit()`.
- * After that, you can call jemi_init() to reinitialize everything.
- *
- * @return A jemi_node or NULL if no more nodes are avaialble.
- */
-jemi_node_t *jemi_alloc_object(void);
-jemi_node_t *jemi_alloc_array(void);
-jemi_node_t *jemi_alloc_number(double value);
-jemi_node_t *jemi_alloc_string(const char *string);
-jemi_node_t *jemi_alloc_bool(bool boolean);
-jemi_node_t *jemi_alloc_true(void);
-jemi_node_t *jemi_alloc_false(void);
-jemi_node_t *jemi_alloc_null(void);
+// ******************************
+// Creating JSON elements
 
 /**
- * @brief Add a key / element pair to an object.
+ * @brief Create an array of elements.
+ *
+ * NOTE: jemi_array_end() must always be the last argument.  If you want to
+ * create an array of zero elements (e.g. for subsequent calls to
+ * `jemi_append_array()`), use the construct `jemi_array(jemi_array_end())`.
  */
-jemi_node_t *jemi_append_object(jemi_node_t *object, const char *key, jemi_node_t *element);
+jemi_node_t *jemi_array(jemi_node_t *element, ...);
+
+/**
+ * @brief Create a JSON object of key/value pairs.
+ *
+ * NOTE: jemi_object_end() must always be the last argument.  If you want to
+ * create an object of zero elements (e.g. for subsequent calls to
+ * `jemi_append_object()`), use the construct `jemi_object(jemi_object_end())`.
+ */
+jemi_node_t *jemi_object(jemi_node_t *element, ...);
+
+/**
+ * @brief Create a JSON number.
+ */
+jemi_node_t *jemi_number(double value);
+
+/**
+ * @brief Create a JSON string.
+ *
+ * NOTE: string must be null-terminated.
+ */
+jemi_node_t *jemi_string(const char *string);
+
+/**
+ * @brief Create a JSON boolean (true or false).
+ */
+jemi_node_t *jemi_bool(bool boolean);
+
+/**
+ * @brief Create a JSON true object.
+ */
+jemi_node_t *jemi_true(void);
+
+/**
+ * @brief Create a JSON false object.
+ */
+jemi_node_t *jemi_false(void);
+
+/**
+ * @brief Create a JSON null object.
+ */
+jemi_node_t *jemi_null(void);
+
+// ******************************
+// Composing JSON elements
 
 /**
  * @brief Add an element to an array.
@@ -126,12 +164,18 @@ jemi_node_t *jemi_append_object(jemi_node_t *object, const char *key, jemi_node_
 jemi_node_t *jemi_append_array(jemi_node_t *array, jemi_node_t *element);
 
 /**
- * @brief Append a series of elements to a collection (object or array)
+ * @brief Add a key / value pair to an object.
+ *
+ * NOTE: the key object a null-terminated C string, not a jemi_string().
  */
-jemi_node_t *jemi_append(jemi_node_t *collection, ...);
+jemi_node_t *jemi_append_object(jemi_node_t *object, const char *key,
+                                jemi_node_t *element);
+
+// ******************************
+// Outputting JSON strings
 
 /**
- * @brief Emit the JEMI structure.
+ * @brief Output a JEMI structure.
  *
  * @param root the root of the JEMI structure.
  * @param writer a function that accepts a single character to be emitted.

@@ -28,7 +28,7 @@
 /**
 To run the tests (on a POSIX / gcc style environment):
 
-gcc -g -Wall -I.. -o test_jemi test_jemi.c ../jemi.c && ./test_jemi && rm ./test_jemi
+gcc -g -Wall -I.. -o test_jemi test_jemi.c ../jemi.c && ./test_jemi && rm -f ./test_jemi
 
 */
 
@@ -44,8 +44,8 @@ gcc -g -Wall -I.. -o test_jemi test_jemi.c ../jemi.c && ./test_jemi && rm ./test
 // *****************************************************************************
 // Private types and definitions
 
-#define JEMI_POOL_SIZE 10
-#define MAX_JSON_LENGTH 100
+#define JEMI_POOL_SIZE 60
+#define MAX_JSON_LENGTH 200
 
 #define ASSERT(e) assert(e, #e, __FILE__, __LINE__)
 
@@ -82,114 +82,146 @@ static void test_render(jemi_node_t *node);
 int main(void) {
   jemi_node_t *root;
 
-  printf("Starting test_jemi...\n");
+  printf("\nStarting test_jemi...");
 
   jemi_init(s_jemi_pool, JEMI_POOL_SIZE);
   ASSERT(jemi_available() == JEMI_POOL_SIZE);
 
   // verify rendinging of each basic type
   jemi_reset();
-  root = jemi_alloc_object();
+  root = jemi_object(jemi_object_end());
   test_render(root);
   ASSERT(strcmp(s_json_string, "{}") == 0);
 
   jemi_reset();
-  root = jemi_alloc_array();
+  root = jemi_array(jemi_array_end());
   test_render(root);
   ASSERT(strcmp(s_json_string, "[]") == 0);
 
   jemi_reset();
-  root = jemi_alloc_number(1.0);
+  root = jemi_number(1.0);
   test_render(root);
   ASSERT(strcmp(s_json_string, "1.000000") == 0);
 
   jemi_reset();
-  root = jemi_alloc_string("red");
+  root = jemi_string("red");
   test_render(root);
   ASSERT(strcmp(s_json_string, "\"red\"") == 0);
 
   jemi_reset();
-  root = jemi_alloc_bool(true);
+  root = jemi_bool(true);
   test_render(root);
   ASSERT(strcmp(s_json_string, "true") == 0);
 
   jemi_reset();
-  root = jemi_alloc_bool(false);
+  root = jemi_bool(false);
   test_render(root);
   ASSERT(strcmp(s_json_string, "false") == 0);
 
   jemi_reset();
-  root = jemi_alloc_true();
+  root = jemi_true();
   test_render(root);
   ASSERT(strcmp(s_json_string, "true") == 0);
 
   jemi_reset();
-  root = jemi_alloc_false();
+  root = jemi_false();
   test_render(root);
   ASSERT(strcmp(s_json_string, "false") == 0);
 
   jemi_reset();
-  root = jemi_alloc_null();
+  root = jemi_null();
   test_render(root);
   ASSERT(strcmp(s_json_string, "null") == 0);
 
   // Test appending elements to an object
   jemi_reset();
-  root = jemi_alloc_object();
-  ASSERT(jemi_append_object(root, "red", jemi_alloc_number(1)) == root);
-  ASSERT(jemi_append_object(root, "grn", jemi_alloc_number(2)) == root);
-  ASSERT(jemi_append_object(root, "blu", jemi_alloc_number(3)) == root);
+  root = jemi_object(jemi_object_end());
+  ASSERT(jemi_append_object(root, "red", jemi_number(1)) == root);
+  ASSERT(jemi_append_object(root, "grn", jemi_number(2)) == root);
+  ASSERT(jemi_append_object(root, "blu", jemi_number(3)) == root);
   test_render(root);
   ASSERT(strcmp(s_json_string, "{\"red\":1.000000,\"grn\":2.000000,\"blu\":3.000000}") == 0);
 
   // Test appending elements to an array
   jemi_reset();
-  root = jemi_alloc_array();
-  ASSERT(jemi_append_array(root, jemi_alloc_number(1)) == root);
-  ASSERT(jemi_append_array(root, jemi_alloc_string("woof")) == root);
-  ASSERT(jemi_append_array(root, jemi_alloc_true()) == root);
-  ASSERT(jemi_append_array(root, jemi_alloc_false()) == root);
-  ASSERT(jemi_append_array(root, jemi_alloc_null()) == root);
+  root = jemi_array(jemi_array_end());
+  ASSERT(jemi_append_array(root, jemi_number(1)) == root);
+  ASSERT(jemi_append_array(root, jemi_string("woof")) == root);
+  ASSERT(jemi_append_array(root, jemi_true()) == root);
+  ASSERT(jemi_append_array(root, jemi_false()) == root);
+  ASSERT(jemi_append_array(root, jemi_null()) == root);
   test_render(root);
   ASSERT(strcmp(s_json_string, "[1.000000,\"woof\",true,false,null]") == 0);
 
   // Test compound object.
   jemi_reset();
-  jemi_node_t *obj = jemi_alloc_object();
-  jemi_node_t *arr = jemi_alloc_array();
-  jemi_append_array(arr, jemi_alloc_number(1));
-  jemi_append_array(arr, jemi_alloc_number(2));
-  jemi_append_array(arr, jemi_alloc_number(3));
+  jemi_node_t *obj = jemi_object(jemi_object_end());
+  jemi_node_t *arr = jemi_array(jemi_array_end());
+  jemi_append_array(arr, jemi_number(1));
+  jemi_append_array(arr, jemi_number(2));
+  jemi_append_array(arr, jemi_number(3));
   jemi_append_object(obj, "colors", arr);
   test_render(root);
-  ASSERT(strcmp(s_json_string, "{\"colors\",[1.000000,2.000000,3.000000]}") == 0);
+  ASSERT(strcmp(s_json_string, "{\"colors\":[1.000000,2.000000,3.000000]}") == 0);
 
   // vararg style appending to an array
   jemi_reset();
   test_render(
-    jemi_append(
-      jemi_alloc_array(),
-      jemi_alloc_number(1),
-      jemi_alloc_string("woof"),
-      jemi_alloc_true(),
-      jemi_alloc_false(),
-      jemi_alloc_null()));
-  ASSERT(strcmp(s_json_string, "[1.000000,\"woof\",true,false,null]") == 0);
+    jemi_array(
+      jemi_number(2),
+      jemi_string("moo"),
+      jemi_true(),
+      jemi_false(),
+      jemi_null(),
+      jemi_array_end()));
+  ASSERT(strcmp(s_json_string, "[2.000000,\"moo\",true,false,null]") == 0);
 
   // vararg creation of a compound object
   jemi_reset();
   test_render(
-    jemi_append(
-      jemi_alloc_object(),
-      jemi_alloc_string("colors"),
-      jemi_append(
-        jemi_alloc_array(),
-        jemi_alloc_number(1),
-        jemi_alloc_number(2),
-        jemi_alloc_number(3))));
-  ASSERT(strcmp(s_json_string, "{\"colors\",[1.000000,2.000000,3.000000]}") == 0);
+    jemi_object(
+      jemi_string("colors"),
+      jemi_array(
+        jemi_number(4),
+        jemi_number(5),
+        jemi_number(6),
+        jemi_array_end()),
+      jemi_object_end()));
+  ASSERT(strcmp(s_json_string, "{\"colors\":[4.000000,5.000000,6.000000]}") == 0);
 
-  printf("... Finished test_jemi\n");
+  // vararg empty array
+  jemi_reset();
+  test_render(jemi_array(jemi_array_end()));
+  ASSERT(strcmp(s_json_string, "[]") == 0);
+
+  // vararg empty array
+  jemi_reset();
+  test_render(jemi_object(jemi_object_end()));
+  ASSERT(strcmp(s_json_string, "{}") == 0);
+
+  // vararg compound example.
+  root =
+      jemi_object(
+          jemi_string("colors"),
+          jemi_array(
+              jemi_object(
+                  jemi_string("yellow"),
+                  jemi_array(jemi_number(255), jemi_number(255), jemi_number(0), jemi_array_end()),
+                  jemi_string("cyan"),
+                  jemi_array(jemi_number(0), jemi_number(255), jemi_number(255), jemi_array_end()),
+                  jemi_string("magenta"),
+                  jemi_array(jemi_number(255), jemi_number(0), jemi_number(255), jemi_array_end()),
+                  jemi_object_end()),
+              jemi_array_end()),
+          jemi_object_end());
+  test_render(root);
+  ASSERT(
+      strcmp(
+          s_json_string,
+          "{\"colors\":[{\"yellow\":[255.000000,255.000000,0.000000],\"cyan\":[0.000000,255.000000,255.000000],\"magenta\":[255.000000,0.000000,255.000000]}]}"
+      ) == 0);
+
+  printf("\n... Finished test_jemi\n");
 }
 
 // *****************************************************************************

@@ -1,32 +1,41 @@
-# jemi
-jemi: a compact, pure-C JSON serializer for embedded systems
+/**
+jemi example.  To compile and run:
 
-## Overview
+gcc -g -Wall -I.. -o example example.c ../jemi.c && ./example && rm -f ./example
 
-`jemi` makes it easy to construct complex JSON structures and then emit them
-to a buffer, a string or a stream.  Designed specifically for embedded systems,
-`jemi` is:
-* **compact**: one source file and one header file
-* **portable**: written in pure C
-* **deterministic**: `jemi` uses user-provided data structures and never calls
-`malloc()`.
-* **yours to use**: `jemi` is covered under the permissive MIT License.
+jemi_example1() shows how you can use variable length argument to construct a
+compound JSON structure with a single top-level call.  The advantage of this
+approach is that the nesting of the function calls parallels the nesting of the
+JSON structure.
 
-`jemi` derives much of its efficiency and small footprint by a philosophy of
-trust: Rather than provide rigorous error checking of input parameters,
-`jemi` instead assumes that you provide valid parameters to function calls.
+jemi_example2() uses `jemi_append_array()` and `jemi_append_object()` functions
+to piecewise build the identical compound JSON structure.  The advantage of this
+approach is that you can pre-compute pieces of the JSON and emit the complete
+result when you have all of the pieces.
 
+Both examples emit the same JSON string (formatted):
+{
+   "colors":{
+      "yellow":[
+         255.000000,
+         255.000000,
+         0.000000
+      ],
+      "cyan":[
+         0.000000,
+         255.000000,
+         255.000000
+      ],
+      "magenta":[
+         255.000000,
+         0.000000,
+         255.000000
+      ]
+   }
+}
 
-## A Short Example
+ */
 
-
-`jemi` provides two styles for building JSON structures.  The "all in one" style
-shown in jemi_example1() lets you use C syntax that parallels the resulting JSON
-structure.  The "piecewise" style shown in jemi_example2() shows how you can
-pre-build pieces of JSON structure to be emitted later.  Both examples emit the
-same results.
-
-```
 #include "jemi.h"
 #include <stdio.h>
 
@@ -93,4 +102,3 @@ int main(void) {
     jemi_example1();
     jemi_example2();
 }
-```
