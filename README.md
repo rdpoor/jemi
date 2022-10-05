@@ -111,8 +111,8 @@ Both `jemi_example1()` and `jemi_example2()` generate the same JSON code which (
          ],
          "magenta":[
             255.000000,
-            255.000000,
-            0.000000
+            0.000000,
+            255.000000
          ]
       }
    ]
