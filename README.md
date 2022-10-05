@@ -94,3 +94,27 @@ int main(void) {
     jemi_example2();
 }
 ```
+Both `jemi_example1()` and `jemi_example2()` generate the same JSON code which (lightly formatted) looks like this:
+```
+{
+   "colors":[
+      {
+         "yellow":[
+            255.000000,
+            255.000000,
+            0.000000
+         ],
+         "cyan":[
+            255.000000,
+            255.000000,
+            0.000000
+         ],
+         "magenta":[
+            255.000000,
+            255.000000,
+            0.000000
+         ]
+      }
+   ]
+}
+```
