@@ -28,7 +28,7 @@
 /**
 To run the tests (on a POSIX / gcc style environment):
 
-gcc -g -Wall -I.. -o test_jemi test_jemi.c ../jemi.c && ./test_jemi && rm -f ./test_jemi
+gcc -g -Wall -I.. -o test_jemi test_jemi.c ../jemi.c && ./test_jemi && rm -rf ./test_jemi ./test_jemi.dSYM
 
 */
 
@@ -72,156 +72,214 @@ static void assert(bool expr, const char *str, const char *file, int line);
 static void writer_fn(char c);
 
 /**
- * @brief Render JSON into s_json_string[]
+ * @brief Render JSON and compare against expected
  */
-static void test_render(jemi_node_t *node);
+static bool renders_as(jemi_node_t *node, const char *expected);
 
 // *****************************************************************************
 // Public code
 
 int main(void) {
-  jemi_node_t *root;
+    jemi_node_t *root;
 
-  printf("\nStarting test_jemi...");
+    printf("\nStarting test_jemi...");
 
-  jemi_init(s_jemi_pool, JEMI_POOL_SIZE);
-  ASSERT(jemi_available() == JEMI_POOL_SIZE);
+    // jemi_init() initializes the free list
+    jemi_init(s_jemi_pool, JEMI_POOL_SIZE);
+    ASSERT(jemi_available() == JEMI_POOL_SIZE);
 
-  // verify rendinging of each basic type
-  jemi_reset();
-  root = jemi_object(jemi_object_end());
-  test_render(root);
-  ASSERT(strcmp(s_json_string, "{}") == 0);
+    // jemi_available() returns number of available nodes
+    for (int i=0; i<JEMI_POOL_SIZE; i++) {
+      ASSERT(jemi_available() == JEMI_POOL_SIZE - i);
+      ASSERT(jemi_true() != NULL);
+    }
 
-  jemi_reset();
-  root = jemi_array(jemi_array_end());
-  test_render(root);
-  ASSERT(strcmp(s_json_string, "[]") == 0);
+    // Allocation with empty freelist returns NULL
+    ASSERT(jemi_available() == 0);
+    ASSERT(jemi_true() == NULL);
 
-  jemi_reset();
-  root = jemi_number(1.0);
-  test_render(root);
-  ASSERT(strcmp(s_json_string, "1.000000") == 0);
+    // jemi_reset() resets the freelist
+    jemi_reset();
+    ASSERT(jemi_available() == JEMI_POOL_SIZE);
 
-  jemi_reset();
-  root = jemi_string("red");
-  test_render(root);
-  ASSERT(strcmp(s_json_string, "\"red\"") == 0);
+    // verify creation and rendering of each basic type
+    jemi_reset();
+    root = jemi_array(NULL);
+    ASSERT(renders_as(root, "[]"));
 
-  jemi_reset();
-  root = jemi_bool(true);
-  test_render(root);
-  ASSERT(strcmp(s_json_string, "true") == 0);
+    jemi_reset();
+    root = jemi_object(NULL);
+    ASSERT(renders_as(root, "{}"));
 
-  jemi_reset();
-  root = jemi_bool(false);
-  test_render(root);
-  ASSERT(strcmp(s_json_string, "false") == 0);
+    jemi_reset();
+    root = jemi_list(NULL);
+    ASSERT(renders_as(root, ""));
 
-  jemi_reset();
-  root = jemi_true();
-  test_render(root);
-  ASSERT(strcmp(s_json_string, "true") == 0);
+    jemi_reset();
+    root = jemi_number(1.0);
+    ASSERT(renders_as(root, "1.000000"));
 
-  jemi_reset();
-  root = jemi_false();
-  test_render(root);
-  ASSERT(strcmp(s_json_string, "false") == 0);
+    jemi_reset();
+    root = jemi_string("red");
+    ASSERT(renders_as(root, "\"red\""));
 
-  jemi_reset();
-  root = jemi_null();
-  test_render(root);
-  ASSERT(strcmp(s_json_string, "null") == 0);
+    jemi_reset();
+    root = jemi_bool(true);
+    ASSERT(renders_as(root, "true"));
 
-  // Test appending elements to an object
-  jemi_reset();
-  root = jemi_object(jemi_object_end());
-  ASSERT(jemi_append_object(root, "red", jemi_number(1)) == root);
-  ASSERT(jemi_append_object(root, "grn", jemi_number(2)) == root);
-  ASSERT(jemi_append_object(root, "blu", jemi_number(3)) == root);
-  test_render(root);
-  ASSERT(strcmp(s_json_string, "{\"red\":1.000000,\"grn\":2.000000,\"blu\":3.000000}") == 0);
+    jemi_reset();
+    root = jemi_bool(false);
+    ASSERT(renders_as(root, "false"));
 
-  // Test appending elements to an array
-  jemi_reset();
-  root = jemi_array(jemi_array_end());
-  ASSERT(jemi_append_array(root, jemi_number(1)) == root);
-  ASSERT(jemi_append_array(root, jemi_string("woof")) == root);
-  ASSERT(jemi_append_array(root, jemi_true()) == root);
-  ASSERT(jemi_append_array(root, jemi_false()) == root);
-  ASSERT(jemi_append_array(root, jemi_null()) == root);
-  test_render(root);
-  ASSERT(strcmp(s_json_string, "[1.000000,\"woof\",true,false,null]") == 0);
+    jemi_reset();
+    root = jemi_true();
+    ASSERT(renders_as(root, "true"));
 
-  // Test compound object.
-  jemi_reset();
-  jemi_node_t *obj = jemi_object(jemi_object_end());
-  jemi_node_t *arr = jemi_array(jemi_array_end());
-  jemi_append_array(arr, jemi_number(1));
-  jemi_append_array(arr, jemi_number(2));
-  jemi_append_array(arr, jemi_number(3));
-  jemi_append_object(obj, "colors", arr);
-  test_render(root);
-  ASSERT(strcmp(s_json_string, "{\"colors\":[1.000000,2.000000,3.000000]}") == 0);
+    jemi_reset();
+    root = jemi_false();
+    ASSERT(renders_as(root, "false"));
 
-  // vararg style appending to an array
-  jemi_reset();
-  test_render(
-    jemi_array(
-      jemi_number(2),
-      jemi_string("moo"),
-      jemi_true(),
-      jemi_false(),
-      jemi_null(),
-      jemi_array_end()));
-  ASSERT(strcmp(s_json_string, "[2.000000,\"moo\",true,false,null]") == 0);
+    jemi_reset();
+    root = jemi_null();
+    ASSERT(renders_as(root, "null"));
 
-  // vararg creation of a compound object
-  jemi_reset();
-  test_render(
-    jemi_object(
-      jemi_string("colors"),
-      jemi_array(
-        jemi_number(4),
-        jemi_number(5),
-        jemi_number(6),
-        jemi_array_end()),
-      jemi_object_end()));
-  ASSERT(strcmp(s_json_string, "{\"colors\":[4.000000,5.000000,6.000000]}") == 0);
+    // Compose compound structures "top down" with jemi_object(), jemi_array()
+    jemi_reset();
+    root = jemi_object(
+        jemi_string("colors"),
+        jemi_object(
+            jemi_string("yellow"),
+            jemi_array(jemi_number(255), jemi_number(255), jemi_number(0), NULL),
+            jemi_string("cyan"),
+            jemi_array(jemi_number(0), jemi_number(255), jemi_number(255), NULL),
+            jemi_string("magenta"),
+            jemi_array(jemi_number(255), jemi_number(0), jemi_number(255), NULL),
+            NULL),
+        NULL);
+    ASSERT(renders_as(root, "{\"colors\":{"
+                            "\"yellow\":[255.000000,255.000000,0.000000],"
+                            "\"cyan\":[0.000000,255.000000,255.000000],"
+                            "\"magenta\":[255.000000,0.000000,255.000000]"
+                            "}}"));
 
-  // vararg empty array
-  jemi_reset();
-  test_render(jemi_array(jemi_array_end()));
-  ASSERT(strcmp(s_json_string, "[]") == 0);
+    // Compose compound structures from "bottom up"
+    jemi_reset();
+    root = jemi_object(NULL);
+    do {
+        jemi_node_t *dict, *rgb;
+        jemi_append_object(root, jemi_list(jemi_string("colors"), dict = jemi_object(NULL), NULL));
+        jemi_append_object(dict, jemi_list(jemi_string("yellow"), rgb = jemi_array(NULL), NULL));
+        jemi_append_array(rgb, jemi_list(jemi_number(255), jemi_number(255), jemi_number(0), NULL));
+        jemi_append_object(dict, jemi_list(jemi_string("cyan"), rgb = jemi_array(NULL), NULL));
+        jemi_append_array(rgb, jemi_list(jemi_number(0), jemi_number(255), jemi_number(255), NULL));
+        jemi_append_object(dict, jemi_list(jemi_string("magenta"), rgb = jemi_array(NULL), NULL));
+        jemi_append_array(rgb, jemi_list(jemi_number(255), jemi_number(0), jemi_number(255), NULL));
+    } while(false);
+    ASSERT(renders_as(root, "{\"colors\":{"
+                            "\"yellow\":[255.000000,255.000000,0.000000],"
+                            "\"cyan\":[0.000000,255.000000,255.000000],"
+                            "\"magenta\":[255.000000,0.000000,255.000000]"
+                            "}}"));
 
-  // vararg empty array
-  jemi_reset();
-  test_render(jemi_object(jemi_object_end()));
-  ASSERT(strcmp(s_json_string, "{}") == 0);
+    // jemi_list() creates "disembodied" lists
+    jemi_reset();
+    root = jemi_list(jemi_true(), NULL);
+    ASSERT(renders_as(root, "true"));
 
-  // vararg compound example.
-  root =
-      jemi_object(
-          jemi_string("colors"),
-          jemi_array(
-              jemi_object(
-                  jemi_string("yellow"),
-                  jemi_array(jemi_number(255), jemi_number(255), jemi_number(0), jemi_array_end()),
-                  jemi_string("cyan"),
-                  jemi_array(jemi_number(0), jemi_number(255), jemi_number(255), jemi_array_end()),
-                  jemi_string("magenta"),
-                  jemi_array(jemi_number(255), jemi_number(0), jemi_number(255), jemi_array_end()),
-                  jemi_object_end()),
-              jemi_array_end()),
-          jemi_object_end());
-  test_render(root);
-  ASSERT(
-      strcmp(
-          s_json_string,
-          "{\"colors\":[{\"yellow\":[255.000000,255.000000,0.000000],\"cyan\":[0.000000,255.000000,255.000000],\"magenta\":[255.000000,0.000000,255.000000]}]}"
-      ) == 0);
+    jemi_reset();
+    root = jemi_list(jemi_true(), jemi_false(), NULL);
+    ASSERT(renders_as(root, "true,false"));
 
-  printf("\n... Finished test_jemi\n");
+    // jemi_copy() makes a copy of a jemi_node structure
+    jemi_reset();
+    root = jemi_array(jemi_number(1), jemi_string("woof"), NULL);
+    ASSERT(renders_as(root, "[1.000000,\"woof\"]"));
+    do {
+        jemi_node_t *alt = jemi_copy(root);
+        ASSERT(alt != root);
+        ASSERT(renders_as(alt, "[1.000000,\"woof\"]"));
+    } while(false);
+
+    // Use jemi_copy() and jemi_list() to create templates
+    //
+    // Recall that in C, the expression "a = b()" evaluates to b().
+    // We exploit this to create a template structure with references to
+    // the fields we want to update.
+    //
+    do {
+        jemi_node_t *snippet_template, *snippets, *color_map, *color_name, *colors, *red_val, *grn_val, *blu_val;
+
+        // create a snippit that will be used as a key/value pair in an object.
+        snippet_template =
+            jemi_list(
+                color_name = jemi_string("color_name"),
+                jemi_array(red_val=jemi_number(0),
+                           grn_val=jemi_number(0),
+                           blu_val=jemi_number(0),
+                           jemi_array_end()),
+                jemi_list_end());
+
+        // Define the overall JSON structure for our color map
+        color_map =
+            jemi_object(
+                colors = jemi_string("colors"),
+                snippets = jemi_object(jemi_object_end()),
+                jemi_object_end());
+        ASSERT(renders_as(color_map, "{\"colors\":{"
+                                     "}}"));
+
+        // customize template for yellow and add a copy to the JSON structure
+        jemi_string_set(color_name, "yellow");
+        jemi_number_set(red_val, 255);
+        jemi_number_set(grn_val, 255);
+        jemi_number_set(blu_val, 0);
+        jemi_append_object(snippets, jemi_copy(snippet_template));
+        ASSERT(renders_as(color_map, "{\"colors\":{"
+                                          "\"yellow\":[255.000000,255.000000,0.000000]"
+                                          "}}"));
+
+        // customize template for cyan and add a copy to the JSON structure
+        jemi_string_set(color_name, "cyan");
+        jemi_number_set(red_val, 0);
+        jemi_number_set(grn_val, 255);
+        jemi_number_set(blu_val, 255);
+        jemi_append_object(snippets, jemi_copy(snippet_template));
+        ASSERT(renders_as(color_map, "{\"colors\":{"
+                                     "\"yellow\":[255.000000,255.000000,0.000000],"
+                                     "\"cyan\":[0.000000,255.000000,255.000000]"
+                                     "}}"));
+
+        // customize template for cyan and add a copy to the JSON structure
+        jemi_string_set(color_name, "magenta");
+        jemi_number_set(red_val, 255);
+        jemi_number_set(grn_val, 0);
+        jemi_number_set(blu_val, 255);
+        jemi_append_object(snippets, jemi_copy(snippet_template));
+        ASSERT(renders_as(color_map, "{\"colors\":{"
+                                     "\"yellow\":[255.000000,255.000000,0.000000],"
+                                     "\"cyan\":[0.000000,255.000000,255.000000],"
+                                     "\"magenta\":[255.000000,0.000000,255.000000]"
+                                     "}}"));
+
+        // just for fun: https://encycolorpedia.com/693b58
+        jemi_string_set(color_name, "aubergine");
+        jemi_number_set(red_val, 105);
+        jemi_number_set(grn_val, 59);
+        jemi_number_set(blu_val, 88);
+        jemi_append_object(snippets, jemi_copy(snippet_template));
+        ASSERT(renders_as(color_map, "{\"colors\":{"
+                                     "\"yellow\":[255.000000,255.000000,0.000000],"
+                                     "\"cyan\":[0.000000,255.000000,255.000000],"
+                                     "\"magenta\":[255.000000,0.000000,255.000000],"
+                                     "\"aubergine\":[105.000000,59.000000,88.000000]"
+                                     "}}"));
+    } while(false);
+
+    printf("\nINFO: %ld out of %d free nodes available",
+           jemi_available(),
+           JEMI_POOL_SIZE);
+
+    printf("\n... Finished test_jemi\n");
 }
 
 // *****************************************************************************
@@ -239,11 +297,12 @@ static void writer_fn(char c) {
   }
 }
 
-static void test_render(jemi_node_t *node) {
-  s_json_idx = 0;
-  jemi_emit(node, writer_fn);
-  s_json_string[s_json_idx] = '\0';
-  printf("\nrendered %s", s_json_string);
+static bool renders_as(jemi_node_t *node, const char *expected) {
+    s_json_idx = 0;
+    jemi_emit(node, writer_fn);
+    s_json_string[s_json_idx] = '\0';
+    printf("\nrendering: %s", s_json_string);
+    return strcmp(s_json_string, expected) == 0;
 }
 
 // *****************************************************************************

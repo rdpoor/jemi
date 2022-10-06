@@ -40,18 +40,17 @@ void jemi_example1(void) {
     jemi_init(node_pool, JEMI_NODES_MAX);
 
     jemi_node_t *root =
-      jemi_object(
-          jemi_string("colors"),
-          jemi_object(
-              jemi_string("yellow"),
-              jemi_array(jemi_number(255), jemi_number(255), jemi_number(0), jemi_array_end()),
-              jemi_string("cyan"),
-              jemi_array(jemi_number(0), jemi_number(255), jemi_number(255), jemi_array_end()),
-              jemi_string("magenta"),
-              jemi_array(jemi_number(255), jemi_number(0), jemi_number(255), jemi_array_end()),
-              jemi_object_end()),
-          jemi_object_end());
-
+        jemi_object(
+            jemi_string("colors"),
+            jemi_object(
+                jemi_string("yellow"),
+                jemi_array(jemi_number(255), jemi_number(255), jemi_number(0), NULL),
+                jemi_string("cyan"),
+                jemi_array(jemi_number(0), jemi_number(255), jemi_number(255), NULL),
+                jemi_string("magenta"),
+                jemi_array(jemi_number(255), jemi_number(0), jemi_number(255), NULL),
+                NULL),
+            NULL);
     jemi_emit(root, (void (*)(char))putchar); // casting avoids compiler warning
     putchar('\n');
 }
@@ -60,30 +59,19 @@ void jemi_example1(void) {
  * Using the "append" functions to piecewise build a compound JSON structure.
  */
 void jemi_example2(void) {
-    jemi_node_t *root, *arr, *obj;
+    jemi_node_t *root, *dict, *rgb;
 
     jemi_init(node_pool, JEMI_NODES_MAX);
 
     // build from the inside out...
-    obj = jemi_object(jemi_object_end());
-    arr = jemi_array(jemi_array_end());
-    jemi_append_array(arr, jemi_number(255));
-    jemi_append_array(arr, jemi_number(255));
-    jemi_append_array(arr, jemi_number(0));
-    jemi_append_object(obj, "yellow", arr);
-    arr = jemi_array(jemi_array_end());
-    jemi_append_array(arr, jemi_number(0));
-    jemi_append_array(arr, jemi_number(255));
-    jemi_append_array(arr, jemi_number(255));
-    jemi_append_object(obj, "cyan", arr);
-    arr = jemi_array(jemi_array_end());
-    jemi_append_array(arr, jemi_number(255));
-    jemi_append_array(arr, jemi_number(0));
-    jemi_append_array(arr, jemi_number(255));
-    jemi_append_object(obj, "magenta", arr);
-
-    root = jemi_object(jemi_object_end());
-    jemi_append_object(root, "colors", obj);
+    root = jemi_object(NULL);
+    jemi_append_object(root, jemi_list(jemi_string("colors"), dict = jemi_object(NULL), NULL));
+    jemi_append_object(dict, jemi_list(jemi_string("yellow"), rgb = jemi_array(NULL), NULL));
+    jemi_append_array(rgb, jemi_list(jemi_number(255), jemi_number(255), jemi_number(0), NULL));
+    jemi_append_object(dict, jemi_list(jemi_string("cyan"), rgb = jemi_array(NULL), NULL));
+    jemi_append_array(rgb, jemi_list(jemi_number(0), jemi_number(255), jemi_number(255), NULL));
+    jemi_append_object(dict, jemi_list(jemi_string("magenta"), rgb = jemi_array(NULL), NULL));
+    jemi_append_array(rgb, jemi_list(jemi_number(255), jemi_number(0), jemi_number(255), NULL));
 
     jemi_emit(root, (void (*)(char))putchar); // casting avoids compiler warning
     putchar('\n');
@@ -92,5 +80,30 @@ void jemi_example2(void) {
 int main(void) {
     jemi_example1();
     jemi_example2();
+}
+```
+
+Both `example1()` and `example2()` output the same JSON, which (when formatted
+for redability) looks like this:
+
+```
+{
+   "colors":{
+      "yellow":[
+         255.000000,
+         255.000000,
+         0.000000
+      ],
+      "cyan":[
+         0.000000,
+         255.000000,
+         255.000000
+      ],
+      "magenta":[
+         255.000000,
+         0.000000,
+         255.000000
+      ]
+   }
 }
 ```

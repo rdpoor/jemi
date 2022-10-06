@@ -48,6 +48,8 @@ extern "C" {
 // *****************************************************************************
 // Public types and definitions
 
+#define JEMI_VERSION "1.1.0"
+
 typedef enum {
   JEMI_OBJECT,
   JEMI_ARRAY,
@@ -73,6 +75,9 @@ typedef struct _jemi_node {
 
 // List terminator value for jemi_obect()
 #define jemi_object_end() ((jemi_node_t *)NULL)
+
+// List terminator value for jemi_obect()
+#define jemi_list_end() ((jemi_node_t *)NULL)
 
 // Signature for the jemi_emit function
 typedef void (*jemi_writer_t)(char ch);
@@ -106,7 +111,7 @@ void jemi_reset(void);
 // Creating JSON elements
 
 /**
- * @brief Create an array of elements.
+ * @brief Create an JSON array with zero or more sub-elements.
  *
  * NOTE: jemi_array_end() must always be the last argument.  If you want to
  * create an array of zero elements (e.g. for subsequent calls to
@@ -115,13 +120,20 @@ void jemi_reset(void);
 jemi_node_t *jemi_array(jemi_node_t *element, ...);
 
 /**
- * @brief Create a JSON object of key/value pairs.
+ * @brief Create a JSON object with zero or more key/value sub-elements.
  *
  * NOTE: jemi_object_end() must always be the last argument.  If you want to
  * create an object of zero elements (e.g. for subsequent calls to
  * `jemi_append_object()`), use the construct `jemi_object(jemi_object_end())`.
  */
 jemi_node_t *jemi_object(jemi_node_t *element, ...);
+
+/**
+ * @brief Create a "disembodied list" of zero or more elements which are not
+ * contained in an array nor in an object.  The result can be used subsequently
+ * as an argument to jemi_append_array() or jemi_append_object().
+ */
+jemi_node_t *jemi_list(jemi_node_t *element, ...);
 
 /**
  * @brief Create a JSON number.
@@ -156,20 +168,48 @@ jemi_node_t *jemi_false(void);
 jemi_node_t *jemi_null(void);
 
 // ******************************
-// Composing JSON elements
+// duplicating a structure
 
 /**
- * @brief Add an element to an array.
+ * @brief Return a copy a JSON structure.
  */
-jemi_node_t *jemi_append_array(jemi_node_t *array, jemi_node_t *element);
+jemi_node_t *jemi_copy(jemi_node_t *root);
+
+
+// ******************************
+// Composing and modifying JSON elements
 
 /**
- * @brief Add a key / value pair to an object.
+ * @brief Add one or more items to the array body.
+ */
+jemi_node_t *jemi_append_array(jemi_node_t *array, jemi_node_t *items);
+
+/**
+ * @brief Add one or more items to the object body.
+ */
+jemi_node_t *jemi_append_object(jemi_node_t *object, jemi_node_t *items);
+
+/**
+ * @brief Add one or more items to a list.
+ */
+jemi_node_t *jemi_append_list(jemi_node_t *list, jemi_node_t *items);
+
+/**
+ * @brief Update contents of a JEMI_NUMBER node
+ */
+jemi_node_t *jemi_number_set(jemi_node_t *node, double number);
+
+/**
+ * @brief Update contents of a JEMI_STRING node
  *
- * NOTE: the key object a null-terminated C string, not a jemi_string().
+ * NOTE: string must be null-terminated.
  */
-jemi_node_t *jemi_append_object(jemi_node_t *object, const char *key,
-                                jemi_node_t *element);
+jemi_node_t *jemi_string_set(jemi_node_t *node, const char *string);
+
+/**
+ * @brief Update contents of a JEMI_BOOL node
+ */
+jemi_node_t *jemi_bool_set(jemi_node_t *node, bool boolean);
 
 // ******************************
 // Outputting JSON strings
