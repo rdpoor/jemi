@@ -201,6 +201,18 @@ jemi_node_t *jemi_append_object(jemi_node_t *object, jemi_node_t *items) {
     return object;
 }
 
+jemi_node_t *jemi_object_add_keyval(jemi_node_t *object,
+                                    const char *key,
+                                    jemi_node_t *value) {
+    if (object) {
+        object->children = jemi_append_list(object->children,
+                                            jemi_list(jemi_string(key),
+                                                      value,
+                                                      NULL));
+    }
+    return object;
+}
+
 jemi_node_t *jemi_append_list(jemi_node_t *list, jemi_node_t *items) {
     if (list == NULL) {
         return items;

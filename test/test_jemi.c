@@ -160,6 +160,20 @@ int main(void) {
     root = jemi_null();
     ASSERT(renders_as(root, "null"));
 
+    // Adding key-value pairs
+    jemi_reset();
+    root = jemi_object(NULL);
+    jemi_object_add_keyval(root, "color", jemi_string("white"));
+    jemi_object_add_keyval(root, "on sale", jemi_true());
+    jemi_object_add_keyval(root, "weight", jemi_float(1.23));
+    jemi_object_add_keyval(root, "sku", jemi_integer(98765));
+    ASSERT(renders_as(root, "{"
+                            "\"color\":\"white\","
+                            "\"on sale\":true,"
+                            "\"weight\":1.230000,"
+                            "\"sku\":98765"
+                            "}"));
+
     // Compose compound structures "top down" with jemi_object(), jemi_array()
     jemi_reset();
     root = jemi_object(

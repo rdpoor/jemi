@@ -194,6 +194,15 @@ jemi_node_t *jemi_append_array(jemi_node_t *array, jemi_node_t *items);
 jemi_node_t *jemi_append_object(jemi_node_t *object, jemi_node_t *items);
 
 /**
+ * @brief Add a key/value pair to the body of an object.
+ *
+ * The key string is wrapped in jemi_string(key).
+ */
+jemi_node_t *jemi_object_add_keyval(jemi_node_t *object,
+                                    const char *key,
+                                    jemi_node_t *value);
+
+/**
  * @brief Add one or more items to a list.
  */
 jemi_node_t *jemi_append_list(jemi_node_t *list, jemi_node_t *items);
