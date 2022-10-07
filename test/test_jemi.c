@@ -49,14 +49,19 @@ gcc -g -Wall -I.. -o test_jemi test_jemi.c ../jemi.c && ./test_jemi && rm -rf ./
 
 #define ASSERT(e) assert(e, #e, __FILE__, __LINE__)
 
+typedef struct {
+    char *buf;
+    size_t buflen;
+    size_t index;
+} json_writer_ctx;
+
+
 // *****************************************************************************
 // Private (static) storage
 
 static jemi_node_t s_jemi_pool[JEMI_POOL_SIZE];
 
 static char s_json_string[MAX_JSON_LENGTH];
-
-static int s_json_idx;  // index into next char of s_json_string[]
 
 // *****************************************************************************
 // Private (static, forward) declarations
@@ -69,7 +74,7 @@ static void assert(bool expr, const char *str, const char *file, int line);
 /**
  * @brief Write a char at a time into s_json_string[].
  */
-static void writer_fn(char c);
+static void writer_fn(char c, void *ctx);
 
 /**
  * @brief Render JSON and compare against expected
@@ -291,16 +296,18 @@ static void assert(bool expr, const char *str, const char *file, int line) {
   }
 }
 
-static void writer_fn(char c) {
-  if (s_json_idx < sizeof(s_json_string)) {
-    s_json_string[s_json_idx++] = c;
+static void writer_fn(char c, void *arg) {
+  json_writer_ctx *ctx = (json_writer_ctx *)arg;
+  if (ctx->index < ctx->buflen) {
+    ctx->buf[ctx->index++] = c;
   }
 }
 
 static bool renders_as(jemi_node_t *node, const char *expected) {
-    s_json_idx = 0;
-    jemi_emit(node, writer_fn);
-    s_json_string[s_json_idx] = '\0';
+    json_writer_ctx ctx = {.buf=s_json_string,
+                           .buflen=sizeof(s_json_string),
+                           .index = 0};
+    jemi_emit(node, writer_fn, &ctx);
     printf("\nrendering: %s", s_json_string);
     return strcmp(s_json_string, expected) == 0;
 }

@@ -58,7 +58,7 @@ static jemi_node_t *jemi_alloc(jemi_type_t type);
 /**
  * @brief Print a node or a list of nodes.
  */
-static void emit_aux(jemi_node_t *root, jemi_writer_t writer_fn, bool is_obj);
+static void emit_aux(jemi_node_t *root, jemi_writer_t writer_fn, void *arg, bool is_obj);
 
 /**
  * @brief Make a copy of a node and its contents, including children nodes,
@@ -69,7 +69,7 @@ static jemi_node_t *copy_node(jemi_node_t *node);
 /**
  * @brief Write a string to the writer_fn, a byte at a time.
  */
-static void emit_string(jemi_writer_t writer_fn, const char *buf);
+static void emit_string(jemi_writer_t writer_fn, void *arg, const char *buf);
 
 // *****************************************************************************
 // Public code
@@ -242,8 +242,9 @@ jemi_node_t *jemi_bool_set(jemi_node_t *node, bool boolean) {
 }
 
 
-void jemi_emit(jemi_node_t *root, jemi_writer_t writer_fn) {
-  emit_aux(root, writer_fn, false);
+void jemi_emit(jemi_node_t *root, jemi_writer_t writer_fn, void *arg) {
+  emit_aux(root, writer_fn, arg, false);
+  writer_fn('\0', arg);
 }
 
 size_t jemi_available(void) {
@@ -271,50 +272,50 @@ static jemi_node_t *jemi_alloc(jemi_type_t type) {
   return node;
 }
 
-static void emit_aux(jemi_node_t *root, jemi_writer_t writer_fn, bool is_obj) {
+static void emit_aux(jemi_node_t *root, jemi_writer_t writer_fn, void *arg, bool is_obj) {
   int count = 0;
   jemi_node_t *node = root;
   while (node) {
     if (is_obj && (count & 1)) {
-      writer_fn(':');
+      writer_fn(':', arg);
     } else if (count > 0) {
-      writer_fn(',');
+      writer_fn(',', arg);
     }
     switch (node->type) {
     case JEMI_OBJECT: {
-      writer_fn('{');
-      emit_aux(node->children, writer_fn, true);
-      writer_fn('}');
+      writer_fn('{', arg);
+      emit_aux(node->children, writer_fn, arg, true);
+      writer_fn('}', arg);
     } break;
 
     case JEMI_ARRAY: {
-      writer_fn('[');
-      emit_aux(node->children, writer_fn, false);
-      writer_fn(']');
+      writer_fn('[', arg);
+      emit_aux(node->children, writer_fn, arg, false);
+      writer_fn(']', arg);
     } break;
 
     case JEMI_NUMBER: {
       char buf[20];
       snprintf(buf, sizeof(buf), "%f", node->number);
-      emit_string(writer_fn, buf);
+      emit_string(writer_fn, arg, buf);
     } break;
 
     case JEMI_STRING: {
-      writer_fn('"');
-      emit_string(writer_fn, node->string);
-      writer_fn('"');
+      writer_fn('"', arg);
+      emit_string(writer_fn, arg, node->string);
+      writer_fn('"', arg);
     } break;
 
     case JEMI_TRUE: {
-      emit_string(writer_fn, "true");
+      emit_string(writer_fn, arg, "true");
     } break;
 
     case JEMI_FALSE: {
-      emit_string(writer_fn, "false");
+      emit_string(writer_fn, arg, "false");
     } break;
 
     case JEMI_NULL: {
-      emit_string(writer_fn, "null");
+      emit_string(writer_fn, arg, "null");
     } break;
     }
     count += 1;
@@ -347,9 +348,9 @@ static jemi_node_t *copy_node(jemi_node_t *node) {
     return copy;
 }
 
-static void emit_string(jemi_writer_t writer_fn, const char *buf) {
+static void emit_string(jemi_writer_t writer_fn, void *arg, const char *buf) {
   while (*buf) {
-    writer_fn(*buf++);
+    writer_fn(*buf++, arg);
   }
 }
 

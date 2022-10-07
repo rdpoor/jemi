@@ -80,7 +80,7 @@ typedef struct _jemi_node {
 #define jemi_list_end() ((jemi_node_t *)NULL)
 
 // Signature for the jemi_emit function
-typedef void (*jemi_writer_t)(char ch);
+typedef void (*jemi_writer_t)(char ch, void *arg);
 
 // *****************************************************************************
 // Public declarations
@@ -218,9 +218,10 @@ jemi_node_t *jemi_bool_set(jemi_node_t *node, bool boolean);
  * @brief Output a JEMI structure.
  *
  * @param root the root of the JEMI structure.
- * @param writer a function that accepts a single character to be emitted.
+ * @param writer writer function wich char and user context args
+ * @param user-supplied context
  */
-void jemi_emit(jemi_node_t *root, jemi_writer_t writer_fn);
+void jemi_emit(jemi_node_t *root, jemi_writer_t writer_fn, void *arg);
 
 /**
  * @brief Return the number of available jemi_node objects.
