@@ -121,8 +121,20 @@ int main(void) {
     ASSERT(renders_as(root, ""));
 
     jemi_reset();
-    root = jemi_number(1.0);
+    root = jemi_float(1.0);
     ASSERT(renders_as(root, "1.000000"));
+
+    jemi_reset();
+    root = jemi_integer(1);
+    ASSERT(renders_as(root, "1"));
+
+    jemi_reset();
+    root = jemi_integer(INT64_MAX);  // most positive
+    ASSERT(renders_as(root, "9223372036854775807"));
+
+    jemi_reset();
+    root = jemi_integer(INT64_MIN);  // most negative
+    ASSERT(renders_as(root, "-9223372036854775808"));
 
     jemi_reset();
     root = jemi_string("red");
@@ -154,17 +166,17 @@ int main(void) {
         jemi_string("colors"),
         jemi_object(
             jemi_string("yellow"),
-            jemi_array(jemi_number(255), jemi_number(255), jemi_number(0), NULL),
+            jemi_array(jemi_integer(255), jemi_integer(255), jemi_integer(0), NULL),
             jemi_string("cyan"),
-            jemi_array(jemi_number(0), jemi_number(255), jemi_number(255), NULL),
+            jemi_array(jemi_integer(0), jemi_integer(255), jemi_integer(255), NULL),
             jemi_string("magenta"),
-            jemi_array(jemi_number(255), jemi_number(0), jemi_number(255), NULL),
+            jemi_array(jemi_integer(255), jemi_integer(0), jemi_integer(255), NULL),
             NULL),
         NULL);
     ASSERT(renders_as(root, "{\"colors\":{"
-                            "\"yellow\":[255.000000,255.000000,0.000000],"
-                            "\"cyan\":[0.000000,255.000000,255.000000],"
-                            "\"magenta\":[255.000000,0.000000,255.000000]"
+                            "\"yellow\":[255,255,0],"
+                            "\"cyan\":[0,255,255],"
+                            "\"magenta\":[255,0,255]"
                             "}}"));
 
     // Compose compound structures from "bottom up"
@@ -174,16 +186,16 @@ int main(void) {
         jemi_node_t *dict, *rgb;
         jemi_append_object(root, jemi_list(jemi_string("colors"), dict = jemi_object(NULL), NULL));
         jemi_append_object(dict, jemi_list(jemi_string("yellow"), rgb = jemi_array(NULL), NULL));
-        jemi_append_array(rgb, jemi_list(jemi_number(255), jemi_number(255), jemi_number(0), NULL));
+        jemi_append_array(rgb, jemi_list(jemi_integer(255), jemi_integer(255), jemi_integer(0), NULL));
         jemi_append_object(dict, jemi_list(jemi_string("cyan"), rgb = jemi_array(NULL), NULL));
-        jemi_append_array(rgb, jemi_list(jemi_number(0), jemi_number(255), jemi_number(255), NULL));
+        jemi_append_array(rgb, jemi_list(jemi_integer(0), jemi_integer(255), jemi_integer(255), NULL));
         jemi_append_object(dict, jemi_list(jemi_string("magenta"), rgb = jemi_array(NULL), NULL));
-        jemi_append_array(rgb, jemi_list(jemi_number(255), jemi_number(0), jemi_number(255), NULL));
+        jemi_append_array(rgb, jemi_list(jemi_integer(255), jemi_integer(0), jemi_integer(255), NULL));
     } while(false);
     ASSERT(renders_as(root, "{\"colors\":{"
-                            "\"yellow\":[255.000000,255.000000,0.000000],"
-                            "\"cyan\":[0.000000,255.000000,255.000000],"
-                            "\"magenta\":[255.000000,0.000000,255.000000]"
+                            "\"yellow\":[255,255,0],"
+                            "\"cyan\":[0,255,255],"
+                            "\"magenta\":[255,0,255]"
                             "}}"));
 
     // jemi_list() creates "disembodied" lists
@@ -197,7 +209,7 @@ int main(void) {
 
     // jemi_copy() makes a copy of a jemi_node structure
     jemi_reset();
-    root = jemi_array(jemi_number(1), jemi_string("woof"), NULL);
+    root = jemi_array(jemi_float(1), jemi_string("woof"), NULL);
     ASSERT(renders_as(root, "[1.000000,\"woof\"]"));
     do {
         jemi_node_t *alt = jemi_copy(root);
@@ -218,65 +230,65 @@ int main(void) {
         snippet_template =
             jemi_list(
                 color_name = jemi_string("color_name"),
-                jemi_array(red_val=jemi_number(0),
-                           grn_val=jemi_number(0),
-                           blu_val=jemi_number(0),
-                           jemi_array_end()),
-                jemi_list_end());
+                jemi_array(red_val=jemi_integer(0),
+                           grn_val=jemi_integer(0),
+                           blu_val=jemi_integer(0),
+                           NULL),
+                NULL);
 
         // Define the overall JSON structure for our color map
         color_map =
             jemi_object(
                 colors = jemi_string("colors"),
-                snippets = jemi_object(jemi_object_end()),
-                jemi_object_end());
+                snippets = jemi_object(NULL),
+                NULL);
         ASSERT(renders_as(color_map, "{\"colors\":{"
                                      "}}"));
 
         // customize template for yellow and add a copy to the JSON structure
         jemi_string_set(color_name, "yellow");
-        jemi_number_set(red_val, 255);
-        jemi_number_set(grn_val, 255);
-        jemi_number_set(blu_val, 0);
+        jemi_integer_set(red_val, 255);
+        jemi_integer_set(grn_val, 255);
+        jemi_integer_set(blu_val, 0);
         jemi_append_object(snippets, jemi_copy(snippet_template));
         ASSERT(renders_as(color_map, "{\"colors\":{"
-                                          "\"yellow\":[255.000000,255.000000,0.000000]"
+                                          "\"yellow\":[255,255,0]"
                                           "}}"));
 
         // customize template for cyan and add a copy to the JSON structure
         jemi_string_set(color_name, "cyan");
-        jemi_number_set(red_val, 0);
-        jemi_number_set(grn_val, 255);
-        jemi_number_set(blu_val, 255);
+        jemi_integer_set(red_val, 0);
+        jemi_integer_set(grn_val, 255);
+        jemi_integer_set(blu_val, 255);
         jemi_append_object(snippets, jemi_copy(snippet_template));
         ASSERT(renders_as(color_map, "{\"colors\":{"
-                                     "\"yellow\":[255.000000,255.000000,0.000000],"
-                                     "\"cyan\":[0.000000,255.000000,255.000000]"
+                                     "\"yellow\":[255,255,0],"
+                                     "\"cyan\":[0,255,255]"
                                      "}}"));
 
         // customize template for cyan and add a copy to the JSON structure
         jemi_string_set(color_name, "magenta");
-        jemi_number_set(red_val, 255);
-        jemi_number_set(grn_val, 0);
-        jemi_number_set(blu_val, 255);
+        jemi_integer_set(red_val, 255);
+        jemi_integer_set(grn_val, 0);
+        jemi_integer_set(blu_val, 255);
         jemi_append_object(snippets, jemi_copy(snippet_template));
         ASSERT(renders_as(color_map, "{\"colors\":{"
-                                     "\"yellow\":[255.000000,255.000000,0.000000],"
-                                     "\"cyan\":[0.000000,255.000000,255.000000],"
-                                     "\"magenta\":[255.000000,0.000000,255.000000]"
+                                     "\"yellow\":[255,255,0],"
+                                     "\"cyan\":[0,255,255],"
+                                     "\"magenta\":[255,0,255]"
                                      "}}"));
 
         // just for fun: https://encycolorpedia.com/693b58
         jemi_string_set(color_name, "aubergine");
-        jemi_number_set(red_val, 105);
-        jemi_number_set(grn_val, 59);
-        jemi_number_set(blu_val, 88);
+        jemi_integer_set(red_val, 105);
+        jemi_integer_set(grn_val, 59);
+        jemi_integer_set(blu_val, 88);
         jemi_append_object(snippets, jemi_copy(snippet_template));
         ASSERT(renders_as(color_map, "{\"colors\":{"
-                                     "\"yellow\":[255.000000,255.000000,0.000000],"
-                                     "\"cyan\":[0.000000,255.000000,255.000000],"
-                                     "\"magenta\":[255.000000,0.000000,255.000000],"
-                                     "\"aubergine\":[105.000000,59.000000,88.000000]"
+                                     "\"yellow\":[255,255,0],"
+                                     "\"cyan\":[0,255,255],"
+                                     "\"magenta\":[255,0,255],"
+                                     "\"aubergine\":[105,59,88]"
                                      "}}"));
     } while(false);
 

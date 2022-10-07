@@ -37,6 +37,7 @@
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
 // *****************************************************************************
 // C++ compatibility
@@ -48,12 +49,13 @@ extern "C" {
 // *****************************************************************************
 // Public types and definitions
 
-#define JEMI_VERSION "1.1.0"
+#define JEMI_VERSION "1.2.0"
 
 typedef enum {
   JEMI_OBJECT,
   JEMI_ARRAY,
-  JEMI_NUMBER,
+  JEMI_FLOAT,
+  JEMI_INTEGER,
   JEMI_STRING,
   JEMI_TRUE,
   JEMI_FALSE,
@@ -65,21 +67,16 @@ typedef struct _jemi_node {
   jemi_type_t type;
   union {
     struct _jemi_node *children; // for JEMI_ARRAY or JEMI_OBJECT
-    double number;               // for JEMI_NUMBER
+    double number;               // for JEMI_FLOAT
+    int64_t integer;             // for JEMI_INTEGER
     const char *string;          // for JEMI_STRING
   };
 } jemi_node_t;
 
-// List terminator value for jemi_array()
-#define jemi_array_end() ((jemi_node_t *)NULL)
-
-// List terminator value for jemi_obect()
-#define jemi_object_end() ((jemi_node_t *)NULL)
-
-// List terminator value for jemi_obect()
-#define jemi_list_end() ((jemi_node_t *)NULL)
-
-// Signature for the jemi_emit function
+/**
+ * @brief Signature for the user-supplied jemi_emit function: it will be called
+ * with a character and a void * pointer to a user-supplied argument.
+ */
 typedef void (*jemi_writer_t)(char ch, void *arg);
 
 // *****************************************************************************
@@ -113,18 +110,18 @@ void jemi_reset(void);
 /**
  * @brief Create an JSON array with zero or more sub-elements.
  *
- * NOTE: jemi_array_end() must always be the last argument.  If you want to
+ * NOTE: NULL must always be the last argument.  If you want to
  * create an array of zero elements (e.g. for subsequent calls to
- * `jemi_append_array()`), use the construct `jemi_array(jemi_array_end())`.
+ * `jemi_append_array()`), use the construct `jemi_array(NULL)`.
  */
 jemi_node_t *jemi_array(jemi_node_t *element, ...);
 
 /**
  * @brief Create a JSON object with zero or more key/value sub-elements.
  *
- * NOTE: jemi_object_end() must always be the last argument.  If you want to
+ * NOTE: NULL must always be the last argument.  If you want to
  * create an object of zero elements (e.g. for subsequent calls to
- * `jemi_append_object()`), use the construct `jemi_object(jemi_object_end())`.
+ * `jemi_append_object()`), use the construct `jemi_object(NULL)`.
  */
 jemi_node_t *jemi_object(jemi_node_t *element, ...);
 
@@ -136,9 +133,16 @@ jemi_node_t *jemi_object(jemi_node_t *element, ...);
 jemi_node_t *jemi_list(jemi_node_t *element, ...);
 
 /**
- * @brief Create a JSON number.
+ * @brief Create a JSON float.  This will render using %f, so it will include
+ * six trailing zeroes.
  */
-jemi_node_t *jemi_number(double value);
+jemi_node_t *jemi_float(double value);
+
+/**
+ * @brief Create a JSON integer.  If your value is an integer, this will render
+ * more compactly than using jemi_float().
+ */
+jemi_node_t *jemi_integer(int64_t value);
 
 /**
  * @brief Create a JSON string.
@@ -195,9 +199,14 @@ jemi_node_t *jemi_append_object(jemi_node_t *object, jemi_node_t *items);
 jemi_node_t *jemi_append_list(jemi_node_t *list, jemi_node_t *items);
 
 /**
- * @brief Update contents of a JEMI_NUMBER node
+ * @brief Update contents of a JEMI_FLOAT node
  */
-jemi_node_t *jemi_number_set(jemi_node_t *node, double number);
+jemi_node_t *jemi_float_set(jemi_node_t *node, double number);
+
+/**
+ * @brief Update contents of a JEMI_INTEGER node
+ */
+jemi_node_t *jemi_integer_set(jemi_node_t *node, int64_t number);
 
 /**
  * @brief Update contents of a JEMI_STRING node

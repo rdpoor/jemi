@@ -130,10 +130,18 @@ jemi_node_t *jemi_list(jemi_node_t *element, ...) {
     return first;
   }
 
-jemi_node_t *jemi_number(double value) {
-  jemi_node_t *node = jemi_alloc(JEMI_NUMBER);
+jemi_node_t *jemi_float(double value) {
+  jemi_node_t *node = jemi_alloc(JEMI_FLOAT);
   if (node) {
     node->number = value;
+  }
+  return node;
+}
+
+jemi_node_t *jemi_integer(int64_t value) {
+  jemi_node_t *node = jemi_alloc(JEMI_INTEGER);
+  if (node) {
+    node->integer = value;
   }
   return node;
 }
@@ -212,9 +220,16 @@ jemi_node_t *jemi_append_list(jemi_node_t *list, jemi_node_t *items) {
     }
 }
 
-jemi_node_t *jemi_number_set(jemi_node_t *node, double number) {
+jemi_node_t *jemi_float_set(jemi_node_t *node, double number) {
     if (node) {
         node->number = number;
+    }
+    return node;
+}
+
+jemi_node_t *jemi_integer_set(jemi_node_t *node, int64_t integer) {
+    if (node) {
+        node->integer = integer;
     }
     return node;
 }
@@ -294,9 +309,15 @@ static void emit_aux(jemi_node_t *root, jemi_writer_t writer_fn, void *arg, bool
       writer_fn(']', arg);
     } break;
 
-    case JEMI_NUMBER: {
+    case JEMI_FLOAT: {
       char buf[20];
-      snprintf(buf, sizeof(buf), "%f", node->number);
+      snprintf(buf, sizeof(buf), "%lf", node->number);
+      emit_string(writer_fn, arg, buf);
+    } break;
+
+    case JEMI_INTEGER: {
+      char buf[22];  // 20 digits, 1 sign, 1 null
+      snprintf(buf, sizeof(buf), "%lld", node->integer);
       emit_string(writer_fn, arg, buf);
     } break;
 
@@ -337,8 +358,11 @@ static jemi_node_t *copy_node(jemi_node_t *node) {
             case JEMI_STRING: {
                 copy->string = node->string;
             } break;
-            case JEMI_NUMBER: {
+            case JEMI_FLOAT: {
                 copy->number = node->number;
+            }
+            case JEMI_INTEGER: {
+                copy->integer = node->integer;
             }
             default: {
                 // no action needed

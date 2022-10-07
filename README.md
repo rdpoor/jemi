@@ -44,11 +44,11 @@ void jemi_example1(void) {
             jemi_string("colors"),
             jemi_object(
                 jemi_string("yellow"),
-                jemi_array(jemi_number(255), jemi_number(255), jemi_number(0), NULL),
+                jemi_array(jemi_integer(255), jemi_integer(255), jemi_integer(0), NULL),
                 jemi_string("cyan"),
-                jemi_array(jemi_number(0), jemi_number(255), jemi_number(255), NULL),
+                jemi_array(jemi_integer(0), jemi_integer(255), jemi_integer(255), NULL),
                 jemi_string("magenta"),
-                jemi_array(jemi_number(255), jemi_number(0), jemi_number(255), NULL),
+                jemi_array(jemi_integer(255), jemi_integer(0), jemi_integer(255), NULL),
                 NULL),
             NULL);
     jemi_emit(root, (void (*)(char))putchar); // casting avoids compiler warning
@@ -67,11 +67,11 @@ void jemi_example2(void) {
     root = jemi_object(NULL);
     jemi_append_object(root, jemi_list(jemi_string("colors"), dict = jemi_object(NULL), NULL));
     jemi_append_object(dict, jemi_list(jemi_string("yellow"), rgb = jemi_array(NULL), NULL));
-    jemi_append_array(rgb, jemi_list(jemi_number(255), jemi_number(255), jemi_number(0), NULL));
+    jemi_append_array(rgb, jemi_list(jemi_integer(255), jemi_integer(255), jemi_integer(0), NULL));
     jemi_append_object(dict, jemi_list(jemi_string("cyan"), rgb = jemi_array(NULL), NULL));
-    jemi_append_array(rgb, jemi_list(jemi_number(0), jemi_number(255), jemi_number(255), NULL));
+    jemi_append_array(rgb, jemi_list(jemi_integer(0), jemi_integer(255), jemi_integer(255), NULL));
     jemi_append_object(dict, jemi_list(jemi_string("magenta"), rgb = jemi_array(NULL), NULL));
-    jemi_append_array(rgb, jemi_list(jemi_number(255), jemi_number(0), jemi_number(255), NULL));
+    jemi_append_array(rgb, jemi_list(jemi_integer(255), jemi_integer(0), jemi_integer(255), NULL));
 
     jemi_emit(root, (void (*)(char))putchar); // casting avoids compiler warning
     putchar('\n');
@@ -90,19 +90,19 @@ for redability) looks like this:
 {
    "colors":{
       "yellow":[
-         255.000000,
-         255.000000,
-         0.000000
+         255,
+         255,
+         0
       ],
       "cyan":[
-         0.000000,
-         255.000000,
-         255.000000
+         0,
+         255,
+         255
       ],
       "magenta":[
-         255.000000,
-         0.000000,
-         255.000000
+         255,
+         0,
+         255
       ]
    }
 }
@@ -136,51 +136,51 @@ jemi_node_t *snippet_template, *snippets, *color_map, *color_name, *colors,
 snippet_template =
     jemi_list(
         color_name = jemi_string("color_name"),
-        jemi_array(red_val=jemi_number(0),
-                   grn_val=jemi_number(0),
-                   blu_val=jemi_number(0),
-                   jemi_array_end()),
-        jemi_list_end());
+        jemi_array(red_val=jemi_integer(0),
+                   grn_val=jemi_integer(0),
+                   blu_val=jemi_integer(0),
+                   NULL),
+        NULL);
 
 // Define the overall JSON structure for our color map
 color_map =
     jemi_object(
         colors = jemi_string("colors"),
-        snippets = jemi_object(jemi_object_end()),
-        jemi_object_end());
+        snippets = jemi_object(NULL),
+        NULL);
 ASSERT(renders_as(color_map, "{\"colors\":{}}"));
 
 // customize template for yellow and add a copy to the "snippets" sub-structure
 jemi_string_set(color_name, "yellow");
-jemi_number_set(red_val, 255);
-jemi_number_set(grn_val, 255);
-jemi_number_set(blu_val, 0);
+jemi_integer_set(red_val, 255);
+jemi_integer_set(grn_val, 255);
+jemi_integer_set(blu_val, 0);
 jemi_append_object(snippets, jemi_copy(snippet_template));
 ASSERT(renders_as(color_map, "{\"colors\":{"
-                                  "\"yellow\":[255.000000,255.000000,0.000000]"
+                                  "\"yellow\":[255,255,0]"
                                   "}}"));
 
 // customize template for cyan and add a copy to the "snippets" sub-structure
 jemi_string_set(color_name, "cyan");
-jemi_number_set(red_val, 0);
-jemi_number_set(grn_val, 255);
-jemi_number_set(blu_val, 255);
+jemi_integer_set(red_val, 0);
+jemi_integer_set(grn_val, 255);
+jemi_integer_set(blu_val, 255);
 jemi_append_object(snippets, jemi_copy(snippet_template));
 ASSERT(renders_as(color_map, "{\"colors\":{"
-                             "\"yellow\":[255.000000,255.000000,0.000000],"
-                             "\"cyan\":[0.000000,255.000000,255.000000]"
+                             "\"yellow\":[255,255,0],"
+                             "\"cyan\":[0,255,255]"
                              "}}"));
 
 // customize template for magenta and add a copy to the "snippets" sub-structure
 jemi_string_set(color_name, "magenta");
-jemi_number_set(red_val, 255);
-jemi_number_set(grn_val, 0);
-jemi_number_set(blu_val, 255);
+jemi_integer_set(red_val, 255);
+jemi_integer_set(grn_val, 0);
+jemi_integer_set(blu_val, 255);
 jemi_append_object(snippets, jemi_copy(snippet_template));
 ASSERT(renders_as(color_map, "{\"colors\":{"
-                             "\"yellow\":[255.000000,255.000000,0.000000],"
-                             "\"cyan\":[0.000000,255.000000,255.000000],"
-                             "\"magenta\":[255.000000,0.000000,255.000000]"
+                             "\"yellow\":[255,255,0],"
+                             "\"cyan\":[0,255,255],"
+                             "\"magenta\":[255,0,255]"
                              "}}"));
 
 ```
@@ -197,8 +197,8 @@ With that said, there are a few things to keep in mind:
 * Don't forget to pass NULL as the last argument to `jemi_array()`,
 `jemi_object()`, or `jemi_list()`.  Failure to do so will almost certainly
 result in some sort of segfault.
-* Calling `jemi_number_set()` on a node that's not a number will lead to
-unexpected results.  Ditto for string and boolean.
+* Calling `jemi_float_set()` on a node that's not a number will lead to
+unexpected results.  Ditto for integer, string and boolean.
 * Calling `jemi_append_array()` on a node that's not an array will lead to
 unexpected results.  Ditto for `jemi_append_object()`.  However, it is okay
 to call `jemi_append_list()` on any jemi node type or NULL.
