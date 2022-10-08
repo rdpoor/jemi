@@ -65,13 +65,13 @@ void jemi_example2(void) {
 
     // build from the inside out...
     root = jemi_object(NULL);
-    jemi_append_object(root, jemi_list(jemi_string("colors"), dict = jemi_object(NULL), NULL));
-    jemi_append_object(dict, jemi_list(jemi_string("yellow"), rgb = jemi_array(NULL), NULL));
-    jemi_append_array(rgb, jemi_list(jemi_integer(255), jemi_integer(255), jemi_integer(0), NULL));
-    jemi_append_object(dict, jemi_list(jemi_string("cyan"), rgb = jemi_array(NULL), NULL));
-    jemi_append_array(rgb, jemi_list(jemi_integer(0), jemi_integer(255), jemi_integer(255), NULL));
-    jemi_append_object(dict, jemi_list(jemi_string("magenta"), rgb = jemi_array(NULL), NULL));
-    jemi_append_array(rgb, jemi_list(jemi_integer(255), jemi_integer(0), jemi_integer(255), NULL));
+    jemi_object_append(root, jemi_list(jemi_string("colors"), dict = jemi_object(NULL), NULL));
+    jemi_object_append(dict, jemi_list(jemi_string("yellow"), rgb = jemi_array(NULL), NULL));
+    jemi_array_append(rgb, jemi_list(jemi_integer(255), jemi_integer(255), jemi_integer(0), NULL));
+    jemi_object_append(dict, jemi_list(jemi_string("cyan"), rgb = jemi_array(NULL), NULL));
+    jemi_array_append(rgb, jemi_list(jemi_integer(0), jemi_integer(255), jemi_integer(255), NULL));
+    jemi_object_append(dict, jemi_list(jemi_string("magenta"), rgb = jemi_array(NULL), NULL));
+    jemi_array_append(rgb, jemi_list(jemi_integer(255), jemi_integer(0), jemi_integer(255), NULL));
 
     jemi_emit(root, (void (*)(char))putchar); // casting avoids compiler warning
     putchar('\n');
@@ -117,8 +117,8 @@ emitting it.
 jemi handles this case for you with the following features;
 * jemi_copy() makes a copy of any jemi structure (or substructure)
 * jemi_list() lets you create a "disembodied list" of items that can be
-appended to the body of a jemi_list or jemi_object via jemi_append_array()
-and jemi_append_object().
+appended to the body of a jemi_list or jemi_object via jemi_array_append()
+and jemi_object_append().
 * jemi_xxx_set() lets you update the value of a string, boolean or number node.
 * The C syntax `a = fn()` evaluates `fn()` and assigns it to `a` and the entire
 expression evaluates to that value.  As shown in the example below, you can
@@ -155,7 +155,7 @@ jemi_string_set(color_name, "yellow");
 jemi_integer_set(red_val, 255);
 jemi_integer_set(grn_val, 255);
 jemi_integer_set(blu_val, 0);
-jemi_append_object(snippets, jemi_copy(snippet_template));
+jemi_object_append(snippets, jemi_copy(snippet_template));
 ASSERT(renders_as(color_map, "{\"colors\":{"
                                   "\"yellow\":[255,255,0]"
                                   "}}"));
@@ -165,7 +165,7 @@ jemi_string_set(color_name, "cyan");
 jemi_integer_set(red_val, 0);
 jemi_integer_set(grn_val, 255);
 jemi_integer_set(blu_val, 255);
-jemi_append_object(snippets, jemi_copy(snippet_template));
+jemi_object_append(snippets, jemi_copy(snippet_template));
 ASSERT(renders_as(color_map, "{\"colors\":{"
                              "\"yellow\":[255,255,0],"
                              "\"cyan\":[0,255,255]"
@@ -176,7 +176,7 @@ jemi_string_set(color_name, "magenta");
 jemi_integer_set(red_val, 255);
 jemi_integer_set(grn_val, 0);
 jemi_integer_set(blu_val, 255);
-jemi_append_object(snippets, jemi_copy(snippet_template));
+jemi_object_append(snippets, jemi_copy(snippet_template));
 ASSERT(renders_as(color_map, "{\"colors\":{"
                              "\"yellow\":[255,255,0],"
                              "\"cyan\":[0,255,255],"
@@ -199,9 +199,9 @@ With that said, there are a few things to keep in mind:
 result in some sort of segfault.
 * Calling `jemi_float_set()` on a node that's not a number will lead to
 unexpected results.  Ditto for integer, string and boolean.
-* Calling `jemi_append_array()` on a node that's not an array will lead to
-unexpected results.  Ditto for `jemi_append_object()`.  However, it is okay
-to call `jemi_append_list()` on any jemi node type or NULL.
+* Calling `jemi_array_append()` on a node that's not an array will lead to
+unexpected results.  Ditto for `jemi_object_append()`.  However, it is okay
+to call `jemi_list_append()` on any jemi node type or NULL.
 * The JSON spec requires that each key of a key/value pair in an object is a
 string.  However, `jemi_object()` does not enforce this: you can use any jemi
 object as a key.  Furthermore, it does not check to see that every key has a

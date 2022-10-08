@@ -49,7 +49,7 @@ extern "C" {
 // *****************************************************************************
 // Public types and definitions
 
-#define JEMI_VERSION "1.2.0"
+#define JEMI_VERSION "1.3.0"
 
 typedef enum {
   JEMI_OBJECT,
@@ -112,7 +112,7 @@ void jemi_reset(void);
  *
  * NOTE: NULL must always be the last argument.  If you want to
  * create an array of zero elements (e.g. for subsequent calls to
- * `jemi_append_array()`), use the construct `jemi_array(NULL)`.
+ * `jemi_array_append()`), use the construct `jemi_array(NULL)`.
  */
 jemi_node_t *jemi_array(jemi_node_t *element, ...);
 
@@ -121,14 +121,14 @@ jemi_node_t *jemi_array(jemi_node_t *element, ...);
  *
  * NOTE: NULL must always be the last argument.  If you want to
  * create an object of zero elements (e.g. for subsequent calls to
- * `jemi_append_object()`), use the construct `jemi_object(NULL)`.
+ * `jemi_object_append()`), use the construct `jemi_object(NULL)`.
  */
 jemi_node_t *jemi_object(jemi_node_t *element, ...);
 
 /**
  * @brief Create a "disembodied list" of zero or more elements which are not
  * contained in an array nor in an object.  The result can be used subsequently
- * as an argument to jemi_append_array() or jemi_append_object().
+ * as an argument to jemi_array_append() or jemi_object_append().
  */
 jemi_node_t *jemi_list(jemi_node_t *element, ...);
 
@@ -186,12 +186,12 @@ jemi_node_t *jemi_copy(jemi_node_t *root);
 /**
  * @brief Add one or more items to the array body.
  */
-jemi_node_t *jemi_append_array(jemi_node_t *array, jemi_node_t *items);
+jemi_node_t *jemi_array_append(jemi_node_t *array, jemi_node_t *items);
 
 /**
  * @brief Add one or more items to the object body.
  */
-jemi_node_t *jemi_append_object(jemi_node_t *object, jemi_node_t *items);
+jemi_node_t *jemi_object_append(jemi_node_t *object, jemi_node_t *items);
 
 /**
  * @brief Add a key/value pair to the body of an object.
@@ -205,7 +205,7 @@ jemi_node_t *jemi_object_add_keyval(jemi_node_t *object,
 /**
  * @brief Add one or more items to a list.
  */
-jemi_node_t *jemi_append_list(jemi_node_t *list, jemi_node_t *items);
+jemi_node_t *jemi_list_append(jemi_node_t *list, jemi_node_t *items);
 
 /**
  * @brief Update contents of a JEMI_FLOAT node

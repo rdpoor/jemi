@@ -187,16 +187,16 @@ jemi_node_t *jemi_copy(jemi_node_t *root) {
     return r2;
 }
 
-jemi_node_t *jemi_append_array(jemi_node_t *array, jemi_node_t *items) {
+jemi_node_t *jemi_array_append(jemi_node_t *array, jemi_node_t *items) {
     if (array) {
-        array->children = jemi_append_list(array->children, items);
+        array->children = jemi_list_append(array->children, items);
     }
     return array;
 }
 
-jemi_node_t *jemi_append_object(jemi_node_t *object, jemi_node_t *items) {
+jemi_node_t *jemi_object_append(jemi_node_t *object, jemi_node_t *items) {
     if (object) {
-        object->children = jemi_append_list(object->children, items);
+        object->children = jemi_list_append(object->children, items);
     }
     return object;
 }
@@ -205,7 +205,7 @@ jemi_node_t *jemi_object_add_keyval(jemi_node_t *object,
                                     const char *key,
                                     jemi_node_t *value) {
     if (object) {
-        object->children = jemi_append_list(object->children,
+        object->children = jemi_list_append(object->children,
                                             jemi_list(jemi_string(key),
                                                       value,
                                                       NULL));
@@ -213,7 +213,7 @@ jemi_node_t *jemi_object_add_keyval(jemi_node_t *object,
     return object;
 }
 
-jemi_node_t *jemi_append_list(jemi_node_t *list, jemi_node_t *items) {
+jemi_node_t *jemi_list_append(jemi_node_t *list, jemi_node_t *items) {
     if (list == NULL) {
         return items;
     } else {

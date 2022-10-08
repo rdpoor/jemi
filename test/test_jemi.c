@@ -198,13 +198,13 @@ int main(void) {
     root = jemi_object(NULL);
     do {
         jemi_node_t *dict, *rgb;
-        jemi_append_object(root, jemi_list(jemi_string("colors"), dict = jemi_object(NULL), NULL));
-        jemi_append_object(dict, jemi_list(jemi_string("yellow"), rgb = jemi_array(NULL), NULL));
-        jemi_append_array(rgb, jemi_list(jemi_integer(255), jemi_integer(255), jemi_integer(0), NULL));
-        jemi_append_object(dict, jemi_list(jemi_string("cyan"), rgb = jemi_array(NULL), NULL));
-        jemi_append_array(rgb, jemi_list(jemi_integer(0), jemi_integer(255), jemi_integer(255), NULL));
-        jemi_append_object(dict, jemi_list(jemi_string("magenta"), rgb = jemi_array(NULL), NULL));
-        jemi_append_array(rgb, jemi_list(jemi_integer(255), jemi_integer(0), jemi_integer(255), NULL));
+        jemi_object_append(root, jemi_list(jemi_string("colors"), dict = jemi_object(NULL), NULL));
+        jemi_object_append(dict, jemi_list(jemi_string("yellow"), rgb = jemi_array(NULL), NULL));
+        jemi_array_append(rgb, jemi_list(jemi_integer(255), jemi_integer(255), jemi_integer(0), NULL));
+        jemi_object_append(dict, jemi_list(jemi_string("cyan"), rgb = jemi_array(NULL), NULL));
+        jemi_array_append(rgb, jemi_list(jemi_integer(0), jemi_integer(255), jemi_integer(255), NULL));
+        jemi_object_append(dict, jemi_list(jemi_string("magenta"), rgb = jemi_array(NULL), NULL));
+        jemi_array_append(rgb, jemi_list(jemi_integer(255), jemi_integer(0), jemi_integer(255), NULL));
     } while(false);
     ASSERT(renders_as(root, "{\"colors\":{"
                             "\"yellow\":[255,255,0],"
@@ -264,7 +264,7 @@ int main(void) {
         jemi_integer_set(red_val, 255);
         jemi_integer_set(grn_val, 255);
         jemi_integer_set(blu_val, 0);
-        jemi_append_object(snippets, jemi_copy(snippet_template));
+        jemi_object_append(snippets, jemi_copy(snippet_template));
         ASSERT(renders_as(color_map, "{\"colors\":{"
                                           "\"yellow\":[255,255,0]"
                                           "}}"));
@@ -274,7 +274,7 @@ int main(void) {
         jemi_integer_set(red_val, 0);
         jemi_integer_set(grn_val, 255);
         jemi_integer_set(blu_val, 255);
-        jemi_append_object(snippets, jemi_copy(snippet_template));
+        jemi_object_append(snippets, jemi_copy(snippet_template));
         ASSERT(renders_as(color_map, "{\"colors\":{"
                                      "\"yellow\":[255,255,0],"
                                      "\"cyan\":[0,255,255]"
@@ -285,7 +285,7 @@ int main(void) {
         jemi_integer_set(red_val, 255);
         jemi_integer_set(grn_val, 0);
         jemi_integer_set(blu_val, 255);
-        jemi_append_object(snippets, jemi_copy(snippet_template));
+        jemi_object_append(snippets, jemi_copy(snippet_template));
         ASSERT(renders_as(color_map, "{\"colors\":{"
                                      "\"yellow\":[255,255,0],"
                                      "\"cyan\":[0,255,255],"
@@ -297,7 +297,7 @@ int main(void) {
         jemi_integer_set(red_val, 105);
         jemi_integer_set(grn_val, 59);
         jemi_integer_set(blu_val, 88);
-        jemi_append_object(snippets, jemi_copy(snippet_template));
+        jemi_object_append(snippets, jemi_copy(snippet_template));
         ASSERT(renders_as(color_map, "{\"colors\":{"
                                      "\"yellow\":[255,255,0],"
                                      "\"cyan\":[0,255,255],"
