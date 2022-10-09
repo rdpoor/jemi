@@ -322,8 +322,14 @@ static void emit_aux(jemi_node_t *root, jemi_writer_t writer_fn, void *arg, bool
     } break;
 
     case JEMI_FLOAT: {
-      char buf[20];
-      snprintf(buf, sizeof(buf), "%lf", node->number);
+      char buf[22];
+      int64_t i = node->number;
+      if ((double)i == node->number) {
+          // number can be represented as an int: suppress trailing zeros
+          snprintf(buf, sizeof(buf), "%lld", i);
+      } else {
+          snprintf(buf, sizeof(buf), "%lf", node->number);
+      }
       emit_string(writer_fn, arg, buf);
     } break;
 
