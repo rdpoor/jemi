@@ -58,7 +58,8 @@ static jemi_node_t *jemi_alloc(jemi_type_t type);
 /**
  * @brief Print a node or a list of nodes.
  */
-static void emit_aux(jemi_node_t *root, jemi_writer_t writer_fn, void *arg, bool is_obj);
+static void emit_aux(jemi_node_t *root, jemi_writer_t writer_fn, void *arg,
+                     bool is_obj);
 
 /**
  * @brief Make a copy of a node and its contents, including children nodes,
@@ -75,34 +76,34 @@ static void emit_string(jemi_writer_t writer_fn, void *arg, const char *buf);
 // Public code
 
 void jemi_init(jemi_node_t *pool, size_t pool_size) {
-  s_jemi_pool = pool;
-  s_jemi_pool_size = pool_size;
-  jemi_reset();
+    s_jemi_pool = pool;
+    s_jemi_pool_size = pool_size;
+    jemi_reset();
 }
 
 void jemi_reset(void) {
-  memset(s_jemi_pool, 0, s_jemi_pool_size * sizeof(jemi_node_t));
-  // rebuild the freelist, using node->sibling as the link field
-  jemi_node_t *next = NULL; // end of the linked list
-  for (int i = 0; i < s_jemi_pool_size; i++) {
-    jemi_node_t *node = &s_jemi_pool[i];
-    node->sibling = next;
-    next = node;
-  }
-  s_jemi_freelist = next; // reset head of the freelist
+    memset(s_jemi_pool, 0, s_jemi_pool_size * sizeof(jemi_node_t));
+    // rebuild the freelist, using node->sibling as the link field
+    jemi_node_t *next = NULL; // end of the linked list
+    for (int i = 0; i < s_jemi_pool_size; i++) {
+        jemi_node_t *node = &s_jemi_pool[i];
+        node->sibling = next;
+        next = node;
+    }
+    s_jemi_freelist = next; // reset head of the freelist
 }
 
 jemi_node_t *jemi_array(jemi_node_t *element, ...) {
-  va_list ap;
-  jemi_node_t *root = jemi_alloc(JEMI_ARRAY);
+    va_list ap;
+    jemi_node_t *root = jemi_alloc(JEMI_ARRAY);
 
-  va_start(ap, element);
-  root->children = element;
-  while(element != NULL) {
-      element->sibling = va_arg(ap, jemi_node_t *);
-      element = element->sibling;
-  }
-  return root;
+    va_start(ap, element);
+    root->children = element;
+    while (element != NULL) {
+        element->sibling = va_arg(ap, jemi_node_t *);
+        element = element->sibling;
+    }
+    return root;
 }
 
 jemi_node_t *jemi_object(jemi_node_t *element, ...) {
@@ -111,55 +112,55 @@ jemi_node_t *jemi_object(jemi_node_t *element, ...) {
 
     va_start(ap, element);
     root->children = element;
-    while(element != NULL) {
+    while (element != NULL) {
         element->sibling = va_arg(ap, jemi_node_t *);
         element = element->sibling;
     }
     return root;
-  }
+}
 
 jemi_node_t *jemi_list(jemi_node_t *element, ...) {
     va_list ap;
     jemi_node_t *first = element;
 
     va_start(ap, element);
-    while(element != NULL) {
+    while (element != NULL) {
         element->sibling = va_arg(ap, jemi_node_t *);
         element = element->sibling;
     }
     return first;
-  }
+}
 
 jemi_node_t *jemi_float(double value) {
-  jemi_node_t *node = jemi_alloc(JEMI_FLOAT);
-  if (node) {
-    node->number = value;
-  }
-  return node;
+    jemi_node_t *node = jemi_alloc(JEMI_FLOAT);
+    if (node) {
+        node->number = value;
+    }
+    return node;
 }
 
 jemi_node_t *jemi_integer(int64_t value) {
-  jemi_node_t *node = jemi_alloc(JEMI_INTEGER);
-  if (node) {
-    node->integer = value;
-  }
-  return node;
+    jemi_node_t *node = jemi_alloc(JEMI_INTEGER);
+    if (node) {
+        node->integer = value;
+    }
+    return node;
 }
 
 jemi_node_t *jemi_string(const char *string) {
-  jemi_node_t *node = jemi_alloc(JEMI_STRING);
-  if (node) {
-    node->string = string;
-  }
-  return node;
+    jemi_node_t *node = jemi_alloc(JEMI_STRING);
+    if (node) {
+        node->string = string;
+    }
+    return node;
 }
 
 jemi_node_t *jemi_bool(bool boolean) {
-  if (boolean) {
-    return jemi_true();
-  } else {
-    return jemi_false();
-  }
+    if (boolean) {
+        return jemi_true();
+    } else {
+        return jemi_false();
+    }
 }
 
 jemi_node_t *jemi_true(void) { return jemi_alloc(JEMI_TRUE); }
@@ -201,14 +202,11 @@ jemi_node_t *jemi_object_append(jemi_node_t *object, jemi_node_t *items) {
     return object;
 }
 
-jemi_node_t *jemi_object_add_keyval(jemi_node_t *object,
-                                    const char *key,
+jemi_node_t *jemi_object_add_keyval(jemi_node_t *object, const char *key,
                                     jemi_node_t *value) {
     if (object) {
-        object->children = jemi_list_append(object->children,
-                                            jemi_list(jemi_string(key),
-                                                      value,
-                                                      NULL));
+        object->children = jemi_list_append(
+            object->children, jemi_list(jemi_string(key), value, NULL));
     }
     return object;
 }
@@ -228,7 +226,7 @@ jemi_node_t *jemi_list_append(jemi_node_t *list, jemi_node_t *items) {
         if (prev) {
             prev->sibling = items;
         }
-      return list;
+        return list;
     }
 }
 
@@ -268,98 +266,98 @@ jemi_node_t *jemi_bool_set(jemi_node_t *node, bool boolean) {
     return node;
 }
 
-
 void jemi_emit(jemi_node_t *root, jemi_writer_t writer_fn, void *arg) {
-  emit_aux(root, writer_fn, arg, false);
-  writer_fn('\0', arg);
+    emit_aux(root, writer_fn, arg, false);
+    writer_fn('\0', arg);
 }
 
 size_t jemi_available(void) {
-  size_t count = 0;
+    size_t count = 0;
 
-  jemi_node_t *node = s_jemi_freelist;
-  while (node) {
-    count += 1;
-    node = node->sibling;
-  }
-  return count;
+    jemi_node_t *node = s_jemi_freelist;
+    while (node) {
+        count += 1;
+        node = node->sibling;
+    }
+    return count;
 }
 
 // *****************************************************************************
 // Private (static) code
 
 static jemi_node_t *jemi_alloc(jemi_type_t type) {
-  // pop one node from the freelist
-  jemi_node_t *node = s_jemi_freelist;
-  if (node) {
-    s_jemi_freelist = node->sibling;
-    node->sibling = NULL;
-    node->type = type;
-  }
-  return node;
+    // pop one node from the freelist
+    jemi_node_t *node = s_jemi_freelist;
+    if (node) {
+        s_jemi_freelist = node->sibling;
+        node->sibling = NULL;
+        node->type = type;
+    }
+    return node;
 }
 
-static void emit_aux(jemi_node_t *root, jemi_writer_t writer_fn, void *arg, bool is_obj) {
-  int count = 0;
-  jemi_node_t *node = root;
-  while (node) {
-    if (is_obj && (count & 1)) {
-      writer_fn(':', arg);
-    } else if (count > 0) {
-      writer_fn(',', arg);
+static void emit_aux(jemi_node_t *root, jemi_writer_t writer_fn, void *arg,
+                     bool is_obj) {
+    int count = 0;
+    jemi_node_t *node = root;
+    while (node) {
+        if (is_obj && (count & 1)) {
+            writer_fn(':', arg);
+        } else if (count > 0) {
+            writer_fn(',', arg);
+        }
+        switch (node->type) {
+        case JEMI_OBJECT: {
+            writer_fn('{', arg);
+            emit_aux(node->children, writer_fn, arg, true);
+            writer_fn('}', arg);
+        } break;
+
+        case JEMI_ARRAY: {
+            writer_fn('[', arg);
+            emit_aux(node->children, writer_fn, arg, false);
+            writer_fn(']', arg);
+        } break;
+
+        case JEMI_FLOAT: {
+            char buf[22];
+            int64_t i = node->number;
+            if ((double)i == node->number) {
+                // number can be represented as an int: suppress trailing zeros
+                snprintf(buf, sizeof(buf), "%lld", i);
+            } else {
+                snprintf(buf, sizeof(buf), "%lf", node->number);
+            }
+            emit_string(writer_fn, arg, buf);
+        } break;
+
+        case JEMI_INTEGER: {
+            char buf[22]; // 20 digits, 1 sign, 1 null
+            snprintf(buf, sizeof(buf), "%lld", node->integer);
+            emit_string(writer_fn, arg, buf);
+        } break;
+
+        case JEMI_STRING: {
+            writer_fn('"', arg);
+            emit_string(writer_fn, arg, node->string);
+            writer_fn('"', arg);
+        } break;
+
+        case JEMI_TRUE: {
+            emit_string(writer_fn, arg, "true");
+        } break;
+
+        case JEMI_FALSE: {
+            emit_string(writer_fn, arg, "false");
+        } break;
+
+        case JEMI_NULL: {
+            emit_string(writer_fn, arg, "null");
+        } break;
+        }
+        count += 1;
+        node = node->sibling;
     }
-    switch (node->type) {
-    case JEMI_OBJECT: {
-      writer_fn('{', arg);
-      emit_aux(node->children, writer_fn, arg, true);
-      writer_fn('}', arg);
-    } break;
-
-    case JEMI_ARRAY: {
-      writer_fn('[', arg);
-      emit_aux(node->children, writer_fn, arg, false);
-      writer_fn(']', arg);
-    } break;
-
-    case JEMI_FLOAT: {
-      char buf[22];
-      int64_t i = node->number;
-      if ((double)i == node->number) {
-          // number can be represented as an int: suppress trailing zeros
-          snprintf(buf, sizeof(buf), "%lld", i);
-      } else {
-          snprintf(buf, sizeof(buf), "%lf", node->number);
-      }
-      emit_string(writer_fn, arg, buf);
-    } break;
-
-    case JEMI_INTEGER: {
-      char buf[22];  // 20 digits, 1 sign, 1 null
-      snprintf(buf, sizeof(buf), "%lld", node->integer);
-      emit_string(writer_fn, arg, buf);
-    } break;
-
-    case JEMI_STRING: {
-      writer_fn('"', arg);
-      emit_string(writer_fn, arg, node->string);
-      writer_fn('"', arg);
-    } break;
-
-    case JEMI_TRUE: {
-      emit_string(writer_fn, arg, "true");
-    } break;
-
-    case JEMI_FALSE: {
-      emit_string(writer_fn, arg, "false");
-    } break;
-
-    case JEMI_NULL: {
-      emit_string(writer_fn, arg, "null");
-    } break;
-    }
-    count += 1;
-    node = node->sibling;
-  }
 }
 
 static jemi_node_t *copy_node(jemi_node_t *node) {
@@ -368,32 +366,32 @@ static jemi_node_t *copy_node(jemi_node_t *node) {
         copy = NULL;
     } else {
         copy = jemi_alloc(node->type);
-        switch(node->type) {
-            case JEMI_ARRAY:
-            case JEMI_OBJECT: {
-                copy->children = jemi_copy(node->children);
-            } break;
-            case JEMI_STRING: {
-                copy->string = node->string;
-            } break;
-            case JEMI_FLOAT: {
-                copy->number = node->number;
-            }
-            case JEMI_INTEGER: {
-                copy->integer = node->integer;
-            }
-            default: {
-                // no action needed
-            }
-        }  // switch()
+        switch (node->type) {
+        case JEMI_ARRAY:
+        case JEMI_OBJECT: {
+            copy->children = jemi_copy(node->children);
+        } break;
+        case JEMI_STRING: {
+            copy->string = node->string;
+        } break;
+        case JEMI_FLOAT: {
+            copy->number = node->number;
+        }
+        case JEMI_INTEGER: {
+            copy->integer = node->integer;
+        }
+        default: {
+            // no action needed
+        }
+        } // switch()
     }
     return copy;
 }
 
 static void emit_string(jemi_writer_t writer_fn, void *arg, const char *buf) {
-  while (*buf) {
-    writer_fn(*buf++, arg);
-  }
+    while (*buf) {
+        writer_fn(*buf++, arg);
+    }
 }
 
 // *****************************************************************************

@@ -52,25 +52,25 @@ extern "C" {
 #define JEMI_VERSION "1.3.0"
 
 typedef enum {
-  JEMI_OBJECT,
-  JEMI_ARRAY,
-  JEMI_FLOAT,
-  JEMI_INTEGER,
-  JEMI_STRING,
-  JEMI_TRUE,
-  JEMI_FALSE,
-  JEMI_NULL
+    JEMI_OBJECT,
+    JEMI_ARRAY,
+    JEMI_FLOAT,
+    JEMI_INTEGER,
+    JEMI_STRING,
+    JEMI_TRUE,
+    JEMI_FALSE,
+    JEMI_NULL
 } jemi_type_t;
 
 typedef struct _jemi_node {
-  struct _jemi_node *sibling; // any object may have siblings...
-  jemi_type_t type;
-  union {
-    struct _jemi_node *children; // for JEMI_ARRAY or JEMI_OBJECT
-    double number;               // for JEMI_FLOAT
-    int64_t integer;             // for JEMI_INTEGER
-    const char *string;          // for JEMI_STRING
-  };
+    struct _jemi_node *sibling; // any object may have siblings...
+    jemi_type_t type;
+    union {
+        struct _jemi_node *children; // for JEMI_ARRAY or JEMI_OBJECT
+        double number;               // for JEMI_FLOAT
+        int64_t integer;             // for JEMI_INTEGER
+        const char *string;          // for JEMI_STRING
+    };
 } jemi_node_t;
 
 /**
@@ -179,7 +179,6 @@ jemi_node_t *jemi_null(void);
  */
 jemi_node_t *jemi_copy(jemi_node_t *root);
 
-
 // ******************************
 // Composing and modifying JSON elements
 
@@ -198,8 +197,7 @@ jemi_node_t *jemi_object_append(jemi_node_t *object, jemi_node_t *items);
  *
  * The key string is wrapped in jemi_string(key).
  */
-jemi_node_t *jemi_object_add_keyval(jemi_node_t *object,
-                                    const char *key,
+jemi_node_t *jemi_object_add_keyval(jemi_node_t *object, const char *key,
                                     jemi_node_t *value);
 
 /**
