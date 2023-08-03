@@ -56,6 +56,7 @@ typedef enum {
     JEMI_ARRAY,
     JEMI_FLOAT,
     JEMI_INTEGER,
+    JEMI_UINTEGER,
     JEMI_STRING,
     JEMI_TRUE,
     JEMI_FALSE,
@@ -69,6 +70,7 @@ typedef struct _jemi_node {
         struct _jemi_node *children; // for JEMI_ARRAY or JEMI_OBJECT
         double number;               // for JEMI_FLOAT
         int64_t integer;             // for JEMI_INTEGER
+        uint64_t uinteger;           // for JEMI_UINTEGER
         const char *string;          // for JEMI_STRING
     };
 } jemi_node_t;
@@ -143,6 +145,7 @@ jemi_node_t *jemi_float(double value);
  * more compactly than using jemi_float().
  */
 jemi_node_t *jemi_integer(int64_t value);
+jemi_node_t *jemi_uinteger(uint64_t value);
 
 /**
  * @brief Create a JSON string.
