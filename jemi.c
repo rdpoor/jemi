@@ -147,6 +147,14 @@ jemi_node_t *jemi_integer(int64_t value) {
     return node;
 }
 
+jemi_node_t *jemi_uinteger(uint64_t value) {
+    jemi_node_t *node = jemi_alloc(JEMI_UINTEGER);
+    if (node) {
+        node->uinteger = value;
+    }
+    return node;
+}
+
 jemi_node_t *jemi_string(const char *string) {
     jemi_node_t *node = jemi_alloc(JEMI_STRING);
     if (node) {
@@ -337,6 +345,12 @@ static void emit_aux(jemi_node_t *root, jemi_writer_t writer_fn, void *arg,
             emit_string(writer_fn, arg, buf);
         } break;
 
+        case JEMI_UINTEGER: {
+            char buf[22]; // 21 digits, 1 null
+            snprintf(buf, sizeof(buf), "%llu", node->uinteger);
+            emit_string(writer_fn, arg, buf);
+        } break;
+
         case JEMI_STRING: {
             writer_fn('"', arg);
             emit_string(writer_fn, arg, node->string);
@@ -379,6 +393,9 @@ static jemi_node_t *copy_node(jemi_node_t *node) {
         }
         case JEMI_INTEGER: {
             copy->integer = node->integer;
+        }
+        case JEMI_UINTEGER: {
+            copy->uinteger = node->uinteger;
         }
         default: {
             // no action needed
